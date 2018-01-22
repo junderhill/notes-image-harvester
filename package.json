@@ -1,0 +1,40 @@
+{
+  "name": "notes-image-harvester",
+  "version": "1.0.0",
+  "description": "CLI Tool to process individual or directory of markdown notes, locally caching any external images and update the references in the markdown",
+  "bin": {
+    "harvester": "./app.js"
+  },
+  "scripts": {
+    "test": "mocha tests --recursive"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/junderhill/notes-image-harvester.git"
+  },
+  "keywords": [
+    "markdown",
+    "notes",
+    "image",
+    "md",
+    "notes",
+    "image",
+    "cache",
+    "markdown",
+    "notes"
+  ],
+  "author": "Jason Underhill",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/junderhill/notes-image-harvester/issues"
+  },
+  "homepage": "https://github.com/junderhill/notes-image-harvester#readme",
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "mocha": "^4.1.0",
+    "mocha-runner": "^1.1.2"
+  },
+  "dependencies": {
+    "commander": "^2.13.0"
+  }
+}
