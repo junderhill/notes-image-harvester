@@ -1,10 +1,10 @@
 'use strict'
 
-const fs = require('fs');
-const mock = require('mock-fs');
-const expect = require('chai').expect;
-const sinon = require('sinon');
-const processor = require('../processor.js');
+var fs = require('fs');
+var mock = require('mock-fs');
+var expect = require('chai').expect;
+var sinon = require('sinon');
+var processor = require('../processor.js');
 
 describe('Processor module', () => {
     describe('findExternalImages', () => {
@@ -91,6 +91,7 @@ describe('Processor module', () => {
             var fsReadFile = sinon.stub(fs, 'readFile');
             processor.processNote('/Users/jason/testnote.md');
             sinon.assert.calledOnce(fsReadFile);
+            fsReadFile.restore();
         });
 
         describe('once file is read', () => {
@@ -99,16 +100,34 @@ describe('Processor module', () => {
                     'path/to/some.md': `# Note header
                     Some note text
                     ![image alt](https://www.google.co.uk/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png)
-                    some more text`
+                    some more text
+                    ![image alt](http://i.dailymail.co.uk/i/sitelogos/logo_mol.gif)
+                    `
                 });
             });
 
-            it('finds the external images in the file', () => {
+            it('finds the external images in the file', (done) => {
                 var findExternalImages = sinon.spy(processor, 'findExternalImages');
                 processor.processNote('path/to/some.md', function () {
                     sinon.assert.calledOnce(findExternalImages);
+                    done();
                 });
-            })
+                findExternalImages.restore();
+            });
+
+            it('generates a new filename for the external images', (done) =>{
+                var externalImagesReturn = ['https://www.google.co.uk/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png','http://i.dailymail.co.uk/i/sitelogos/logo_mol.gif'];
+                var findExternalImages = sinon.stub(processor, 'findExternalImages').returns(externalImagesReturn);
+                var generateNewFileName = sinon.spy(processor, 'generateNewFileName');
+
+                processor.processNote('path/to/some.md', function () {
+                    console.log('external image count: ' + externalImagesReturn.length);
+                    sinon.assert.callCount(generateNewFileName, externalImagesReturn.length);
+                    findExternalImages.restore();
+                    generateNewFileName.restore();
+                    done();
+                });
+            });
 
             after(function () {
                 mock.restore();
