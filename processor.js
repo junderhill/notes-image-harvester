@@ -4,7 +4,9 @@ const fs = require('fs');
 
 exports.processNote = function(fileLocation){
 	fs.readFile(fileLocation, function(err,data){
+		if(err) throw err;
 
+		var externalImages = findExternalImages(data);
 	});
 };
 

@@ -1,6 +1,7 @@
 'use strict'
 
 const fs = require('fs');
+const mock = require('mock-fs');
 const expect = require('chai').expect;
 const sinon = require('sinon');
 const processor = require('../processor.js');
@@ -91,10 +92,29 @@ describe('Processor module', () => {
             processor.processNote('/Users/jason/testnote.md');
             sinon.assert.calledOnce(fsReadFile);
         });
-        /*it('finds any external images', () => {
-            var findExternalImages = sinon.spy(processor, 'findExternalImages');
-            processor.processNote()
-        });*/
+
+        describe('once file is read', () => {
+            before(function () {
+                mock({
+                    'path/to/some.md': `# Note header
+                    Some note text
+                    ![image alt](https://www.google.co.uk/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png)
+                    some more text`
+                });
+            });
+
+            it('finds the external images in the file', () => {
+                var findExternalImages = sinon.spy(processor, 'findExternalImages');
+                processor.processNote('path/to/some.md', function () {
+                    sinon.assert.calledOnce(findExternalImages);
+                });
+            })
+
+            after(function () {
+                mock.restore();
+            });
+        });
+
     });
 
 

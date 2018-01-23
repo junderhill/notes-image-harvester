@@ -33,6 +33,7 @@
     "chai": "^4.1.2",
     "mocha": "^4.1.0",
     "mocha-runner": "^1.1.2",
+    "mock-fs": "^4.4.2",
     "sinon": "^4.2.0"
   },
   "dependencies": {
