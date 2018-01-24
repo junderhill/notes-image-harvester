@@ -3,10 +3,14 @@
 const fs = require('fs');
 
 var processNote = function(fileLocation, callback){
-	fs.readFile(fileLocation, "utf8",function(err,data){
+	fs.readFile(fileLocation, 'utf8', function(err,data){
 		if(err) throw err;
 
-		var externalImages = findExternalImages(data);
+		var externalImages = module.exports.findExternalImages(data);
+		for(var i = 0; i < externalImages.length; i++){
+			var newFilename = module.exports.generateNewFileName(externalImages[i]);
+		}
+		
 		callback();
 	});
 };

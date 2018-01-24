@@ -95,6 +95,8 @@ describe('Processor module', () => {
         });
 
         describe('once file is read', () => {
+            var externalImagesReturn = ['https://www.google.co.uk/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png','http://i.dailymail.co.uk/i/sitelogos/logo_mol.gif'];
+           
             before(function () {
                 mock({
                     'path/to/some.md': `# Note header
@@ -107,19 +109,17 @@ describe('Processor module', () => {
             });
 
             it('finds the external images in the file', (done) => {
-                var findExternalImages = sinon.spy(processor, 'findExternalImages');
+                var findExternalImages = sinon.stub(processor, 'findExternalImages').returns(externalImagesReturn);
                 processor.processNote('path/to/some.md', function () {
                     sinon.assert.calledOnce(findExternalImages);
+                    findExternalImages.restore();
                     done();
                 });
-                findExternalImages.restore();
-            });
+            }).timeout(5000);
 
             it('generates a new filename for the external images', (done) =>{
-                var externalImagesReturn = ['https://www.google.co.uk/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png','http://i.dailymail.co.uk/i/sitelogos/logo_mol.gif'];
                 var findExternalImages = sinon.stub(processor, 'findExternalImages').returns(externalImagesReturn);
                 var generateNewFileName = sinon.spy(processor, 'generateNewFileName');
-
                 processor.processNote('path/to/some.md', function () {
                     console.log('external image count: ' + externalImagesReturn.length);
                     sinon.assert.callCount(generateNewFileName, externalImagesReturn.length);
@@ -127,7 +127,7 @@ describe('Processor module', () => {
                     generateNewFileName.restore();
                     done();
                 });
-            });
+            }).timeout(5000);
 
             after(function () {
                 mock.restore();
