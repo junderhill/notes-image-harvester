@@ -8,13 +8,15 @@ var processNote = function(fileLocation, callback){
 
 		var externalImages = module.exports.findExternalImages(data);
 		for(var i = 0; i < externalImages.length; i++){
-			var newFilename = module.exports.generateNewFileName(externalImages[i]);
+			var urlFromMarkdown = module.exports.extractUrlFromMarkdown(externalImages[i]);
+			var newFilename = module.exports.generateNewFileName(urlFromMarkdown);
 		}
 		
 		callback();
 	});
 };
 
+// Returns the external images in the note including there markdown syntax
 var findExternalImages = function(noteContent){
 	return noteContent.match(/!\[.*\]\([^\.].*\)/g);
 };
@@ -22,6 +24,11 @@ var findExternalImages = function(noteContent){
 var updateImageLocation = function(noteContent, originalImageMarkup, newImageMarkup){
 	return noteContent.replace(originalImageMarkup, newImageMarkup);
 };
+
+var extractUrlFromMarkdown = function(markdown){
+	var re = /(?:!\[.*]\()(.*)(?:\)$)/;
+	return re.exec(markdown)[1];
+}
 
 var generateNewFileName = function(location){
 	var filename = extractFilenameFromLocation(location);
@@ -45,5 +52,6 @@ module.exports = {
 	generateNewFileName: generateNewFileName,
 	updateImageLocation: updateImageLocation,
 	findExternalImages: findExternalImages,
+	extractUrlFromMarkdown: extractUrlFromMarkdown,
 	processNote: processNote
   }
