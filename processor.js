@@ -1,6 +1,7 @@
 'use strict'
 
 const fs = require('fs');
+var request = require('request');
 
 var processNote = function(fileLocation, callback){
 	fs.readFile(fileLocation, 'utf8', function(err,data){
@@ -10,6 +11,8 @@ var processNote = function(fileLocation, callback){
 		for(var i = 0; i < externalImages.length; i++){
 			var urlFromMarkdown = module.exports.extractUrlFromMarkdown(externalImages[i]);
 			var newFilename = module.exports.generateNewFileName(urlFromMarkdown);
+
+			request(urlFromMarkdown).pipe(fs.createWriteStream(newFilename));
 		}
 		
 		callback();

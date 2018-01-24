@@ -34,9 +34,11 @@
     "mocha": "^4.1.0",
     "mocha-runner": "^1.1.2",
     "mock-fs": "^4.4.2",
+    "nock": "^9.1.6",
     "sinon": "^4.2.0"
   },
   "dependencies": {
-    "commander": "^2.13.0"
+    "commander": "^2.13.0",
+    "request": "^2.83.0"
   }
 }

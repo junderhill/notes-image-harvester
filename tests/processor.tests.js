@@ -1,6 +1,8 @@
 'use strict'
 
 var fs = require('fs');
+var request = require('request');
+var nock = require('nock');
 var mock = require('mock-fs');
 var expect = require('chai').expect;
 var sinon = require('sinon');
@@ -94,7 +96,6 @@ describe('Processor module', () => {
         });
     });
 
-
     describe('processNote', () => {
         it('loads the file contents', () => {
             var fsReadFile = sinon.stub(fs, 'readFile');
@@ -142,6 +143,20 @@ describe('Processor module', () => {
                 var generateNewFileName = sinon.spy(processor, 'generateNewFileName');
                 processor.processNote('path/to/some.md', function () {
                     sinon.assert.callCount(generateNewFileName, externalImagesReturn.length);
+                    generateNewFileName.restore();
+                    done();
+                });
+            });
+
+            it('downloads the file to its new filename', (done) => {
+                var generateNewFileName = sinon.stub(processor, 'generateNewFileName').returns('./test.png')
+                    nock(/^https?.*/)
+                    .get(/.*\.[a-z]{3,4}$/)                
+                    .reply(200, 'somedata');
+                processor.processNote('path/to/some.md', function () {
+                    if(!fs.existsSync('/test.png')){
+                        expect.fail("","",'Test file hasnt been written');
+                    }
                     generateNewFileName.restore();
                     done();
                 });
