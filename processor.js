@@ -1,6 +1,6 @@
 'use strict'
 
-const fs = require('fs');
+var fs = require('fs');
 var request = require('request');
 
 var processNote = function(fileLocation, callback){

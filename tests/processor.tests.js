@@ -113,7 +113,6 @@ describe('Processor module', () => {
                 mock({
                     'path/to/some.md': `# Note header
                     Some note text
-                    ![image alt](https://www.google.co.uk/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png)
                     some more text
                     ![image alt](http://i.dailymail.co.uk/i/sitelogos/logo_mol.gif)
                     `
@@ -149,14 +148,16 @@ describe('Processor module', () => {
             });
 
             it('downloads the file to its new filename', (done) => {
-                var generateNewFileName = sinon.stub(processor, 'generateNewFileName').returns('./test.png')
-                    nock(/^https?.*/)
+                var writeStream = sinon.spy(fs, 'writeStream');
+                var generateNewFileName = sinon.stub(processor, 'generateNewFileName').returns('./test.png');
+                nock(/^https?.*/)
                     .get(/.*\.[a-z]{3,4}$/)                
                     .reply(200, 'somedata');
                 processor.processNote('path/to/some.md', function () {
-                    if(!fs.existsSync('/test.png')){
-                        expect.fail("","",'Test file hasnt been written');
-                    }
+                    // if(!fs.existsSync('/test.png')){
+                    //     expect.fail("","",'Test file hasnt been written');
+                    // }
+                    sinon.assert.calledOnce(writeStream);
                     generateNewFileName.restore();
                     done();
                 });
