@@ -99,6 +99,17 @@ describe('Processor module', () => {
         });
     });
 
+    describe('replaceUrlInImageMarkdown', () => {
+        it('replaces the url', () => {
+            var originalMarkdown = '![some text](http://www.google.com/image.jpg)';
+            var newFilename = './images/image_01234.jpg';
+
+            var result = processor.replaceUrlInImageMarkdown(originalMarkdown, newFilename);
+
+            expect(result).to.be.equal('![some text](./images/image_01234.jpg)');
+        })
+    });
+
     describe('processNote', () => {
         var noteText =
             `# Note header
@@ -159,6 +170,16 @@ describe('Processor module', () => {
 
 
             it('downloads the files', (done) => {
+                var fsReadFile = sandbox.stub(fs, 'readFile').yields(null, noteText);
+                var generateNewFileName = sandbox.stub(processor, 'generateNewFileName').returns('./test.png');
+
+                processor.processNote('path/to/some.md', fs, function () {
+                    sandbox.assert.callCount(httpLib, 1);
+                    done();
+                });
+            });
+
+            it('updates the note contents with the new filename', (done)=>{
                 var fsReadFile = sandbox.stub(fs, 'readFile').yields(null, noteText);
                 var generateNewFileName = sandbox.stub(processor, 'generateNewFileName').returns('./test.png');
 

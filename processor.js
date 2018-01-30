@@ -45,6 +45,11 @@ var generateNewFileName = function(location){
 	return './images/' + filename;
 };
 
+var replaceUrlInImageMarkdown = function(originalMarkdown, newFilename){
+	var currentUrl = module.exports.extractUrlFromMarkdown(originalMarkdown);
+	return originalMarkdown.replace(currentUrl, newFilename);
+};
+
 function extractFilenameFromLocation(location){
 	var re = /[^/\\&\?]+\.\w{3,4}(?=([\?&].*$|$))/;
 	return re.exec(location)[0];
@@ -62,5 +67,6 @@ module.exports = {
 	updateImageLocation: updateImageLocation,
 	findExternalImages: findExternalImages,
 	extractUrlFromMarkdown: extractUrlFromMarkdown,
+	replaceUrlInImageMarkdown: replaceUrlInImageMarkdown,
 	processNote: processNote
   }
