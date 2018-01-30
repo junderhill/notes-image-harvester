@@ -39,6 +39,7 @@
   },
   "dependencies": {
     "commander": "^2.13.0",
+    "httpreq": "^0.4.24",
     "request": "^2.83.0"
   }
 }

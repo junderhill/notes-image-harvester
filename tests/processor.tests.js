@@ -1,14 +1,17 @@
 'use strict'
 
 var fs = require('fs');
-var request = require('request');
-var nock = require('nock');
-var mock = require('mock-fs');
 var expect = require('chai').expect;
 var sinon = require('sinon');
+var httpreq = require('httpreq')
 var processor = require('../processor.js');
 
 describe('Processor module', () => {
+    var sandbox;
+    beforeEach(function () {
+        sandbox = sinon.sandbox.create();
+    });
+
     describe('findExternalImages', () => {
         describe('when note contains an image', () => {
             it('returns an array of markdown image tags', () => {
@@ -68,7 +71,7 @@ describe('Processor module', () => {
     });
 
     describe('extractUrlFromMarkdown', () => {
-        it('extracts the url from the image markdown',() => {
+        it('extracts the url from the image markdown', () => {
             var url = 'https://www.google.co.uk/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png';
             var data = `![Some alt text](${url})`;
             var result = processor.extractUrlFromMarkdown(data);
@@ -97,81 +100,78 @@ describe('Processor module', () => {
     });
 
     describe('processNote', () => {
+        var noteText =
+            `# Note header
+            Some note text
+            some more text
+            ![image alt](http://i.dailymail.co.uk/i/sitelogos/logo_mol.gif)
+            `;
+        var httpLib = null;
+            
+        beforeEach(function() {
+            var httpResponse = {
+                statusCode: 200,
+                headers: {},
+                body: 'somedata'
+            };
+            httpLib = sandbox.stub(httpreq, 'download').callsArgWith(3,null,httpResponse);
+        });
+
         it('loads the file contents', () => {
-            var fsReadFile = sinon.stub(fs, 'readFile');
-            processor.processNote('/Users/jason/testnote.md');
-            sinon.assert.calledOnce(fsReadFile);
-            fsReadFile.restore();
+            var fsReadFile = sandbox.stub(fs, 'readFile').yields(null, noteText);
+            processor.processNote('/Users/jason/testnote.md', fs, function () {
+                sandbox.assert.calledOnce(fsReadFile);
+                fsReadFile.restore();
+            });
         });
 
         describe('once file is read', () => {
-            var externalImagesReturn = [
-                '![image alt](https://www.google.co.uk/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png)',
-                '![image alt](http://i.dailymail.co.uk/i/sitelogos/logo_mol.gif)'];
-            var findExternalImages; 
-            before(function () {
-                mock({
-                    'path/to/some.md': `# Note header
-                    Some note text
-                    some more text
-                    ![image alt](http://i.dailymail.co.uk/i/sitelogos/logo_mol.gif)
-                    `
-                });
-            });
-            beforeEach(function(){
-                findExternalImages = sinon.stub(processor, 'findExternalImages').returns(externalImagesReturn);
-            });
-
             it('finds the external images in the file', (done) => {
-                processor.processNote('path/to/some.md', function () {
-                    sinon.assert.calledOnce(findExternalImages);
+                var mockfs = sandbox.stub(fs, 'readFile');
+                mockfs.yields(null, noteText);
+                var findExternalImages = sandbox.spy(processor, 'findExternalImages');
+                processor.processNote('path/to/some.md', fs, function () {
+                    sandbox.assert.calledOnce(findExternalImages);
+                    findExternalImages.restore();
                     done();
                 });
             });
 
             it('extracts the url from the image markdown', (done) => {
-                var extractUrlFromMarkdown = sinon.spy(processor, 'extractUrlFromMarkdown');
-                processor.processNote('path/to/some.md', function () {
-                    sinon.assert.callCount(extractUrlFromMarkdown, externalImagesReturn.length);
-                    extractUrlFromMarkdown.restore();
+                var mockfs = sandbox.stub(fs, 'readFile');
+                mockfs.yields(null, noteText);
+                var extractUrlFromMarkdown = sandbox.spy(processor, 'extractUrlFromMarkdown');
+                processor.processNote('path/to/some.md', fs, function () {
+                    sandbox.assert.callCount(extractUrlFromMarkdown, 1);
                     done();
                 });
             });
 
-            it('generates a new filename for the external images', (done) =>{
-                var generateNewFileName = sinon.spy(processor, 'generateNewFileName');
-                processor.processNote('path/to/some.md', function () {
-                    sinon.assert.callCount(generateNewFileName, externalImagesReturn.length);
-                    generateNewFileName.restore();
+            it('generates a new filename for the external images', (done) => {
+                var mockfs = sandbox.stub(fs, 'readFile');
+                mockfs.yields(null, noteText);
+                var generateNewFileName = sandbox.spy(processor, 'generateNewFileName');
+                processor.processNote('path/to/some.md', fs, function () {
+                    sandbox.assert.callCount(generateNewFileName, 1);
                     done();
                 });
             });
 
-            it('downloads the file to its new filename', (done) => {
-                var writeStream = sinon.spy(fs, 'writeStream');
-                var generateNewFileName = sinon.stub(processor, 'generateNewFileName').returns('./test.png');
-                nock(/^https?.*/)
-                    .get(/.*\.[a-z]{3,4}$/)                
-                    .reply(200, 'somedata');
-                processor.processNote('path/to/some.md', function () {
-                    // if(!fs.existsSync('/test.png')){
-                    //     expect.fail("","",'Test file hasnt been written');
-                    // }
-                    sinon.assert.calledOnce(writeStream);
-                    generateNewFileName.restore();
+
+            it('downloads the files', (done) => {
+                var fsReadFile = sandbox.stub(fs, 'readFile').yields(null, noteText);
+                var generateNewFileName = sandbox.stub(processor, 'generateNewFileName').returns('./test.png');
+
+                processor.processNote('path/to/some.md', fs, function () {
+                    sandbox.assert.callCount(httpLib, 1);
                     done();
                 });
             });
 
-            afterEach(function() {
-                findExternalImages.restore();
-            });
-            after(function () {
-                mock.restore();
-            });
         });
 
     });
-
-
+    afterEach(function () {
+        sandbox.restore();
+    });
 });

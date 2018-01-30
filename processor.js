@@ -1,21 +1,27 @@
 'use strict'
 
-var fs = require('fs');
-var request = require('request');
+var httpreq = require('httpreq');
 
-var processNote = function(fileLocation, callback){
+var processNote = function(fileLocation, fs, callback){
 	fs.readFile(fileLocation, 'utf8', function(err,data){
 		if(err) throw err;
 
 		var externalImages = module.exports.findExternalImages(data);
+		var downloadedCount = 0;
 		for(var i = 0; i < externalImages.length; i++){
 			var urlFromMarkdown = module.exports.extractUrlFromMarkdown(externalImages[i]);
 			var newFilename = module.exports.generateNewFileName(urlFromMarkdown);
 
-			request(urlFromMarkdown).pipe(fs.createWriteStream(newFilename));
+			httpreq.download(urlFromMarkdown, newFilename, function(err,progress){
+				//progress callback
+			}, function(err, res){
+				//completed callback
+				downloadedCount++;
+				if(downloadedCount == externalImages.length){
+					callback();
+				}
+			})
 		}
-		
-		callback();
 	});
 };
 
